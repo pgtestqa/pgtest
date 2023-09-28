@@ -13,20 +13,18 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v2.4.4 # Use a version that supports Node.js 16
 
-      # Define a list of target URLs
+      # Set Target URLs as an environment variable
       - name: Set Target URLs
-        id: set-targets
         run: |
-          echo "::set-output name=targets::https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge,https://front.questionnaire.ip-poc.com/app/home"
-        # You can modify the list of target URLs above as needed, separated by commas
+          echo "TARGETS=https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge,https://front.questionnaire.ip-poc.com/app/home" >> $GITHUB_ENV
 
       # Split the list of targets into an array
       - name: Split Target URLs
         id: split-targets
         run: |
-          IFS=',' read -ra TARGETS <<< "${{ steps.set-targets.outputs.targets }}"
+          IFS=',' read -ra TARGETS <<< "$TARGETS"
           for target in "${TARGETS[@]}"; do
             echo "Scanning target: $target"
             # Run the OWASP ZAP Baseline Scan for each target
