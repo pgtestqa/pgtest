@@ -9,6 +9,7 @@ export default class BrowserLaunch extends BasePage {
     super(page);
     this.fieldconfig = fieldconfig;
   }
+  // method to initialize the browser
 public async browserLaunch(){
     console.log("Browser launch");
 if (!this.browser) {
