@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2.4.4 # Use a version that supports Node.js 16
+        uses: actions/checkout@v2 # Use the latest version of actions/checkout
 
       # Set Target URLs as an environment variable
       - name: Set Target URLs
