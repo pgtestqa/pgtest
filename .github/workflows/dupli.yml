@@ -61,4 +61,4 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: zap-scan-reports
-          path: myreport-*.html
+          path: mynewreport-*.html
