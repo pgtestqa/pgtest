@@ -1,0 +1,61 @@
+name: CI
+on:
+  push:
+    branches: ['develop']
+  pull_request:
+    branches: ['develop']
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      # Define a list of target URLs
+      - name: Set Target URLs
+        id: set-targets
+        run: |
+          echo "::set-output name=targets::https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge,https://front.questionnaire.ip-poc.com/app/home"
+        # You can modify the list of target URLs above as needed, separated by commas
+
+      # Split the list of targets into an array
+      - name: Split Target URLs
+        id: split-targets
+        run: |
+          IFS=',' read -ra TARGETS <<< "${{ steps.set-targets.outputs.targets }}"
+          for target in "${TARGETS[@]}"; do
+            echo "Scanning target: $target"
+            # Run the OWASP ZAP Baseline Scan for each target
+            # Adjust the ZAP command accordingly to use the $target variable
+          done
+
+      # Add your OWASP ZAP Baseline Scan step here
+      - name: OWASP ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          # Use $target as the target URL in your scan
+          target: ${{ steps.set-targets.outputs.targets }}
+
+      # Add the steps to save, check, and publish the scan reports here
+
+      - name: Save Scan Report
+        run: |
+          # Rename the report file to something unique
+          mv zap-baseline-report.html myreport-$(date +"%Y%m%d%H%M%S").html
+
+      - name: Check for Issues in Scan Report
+        run: |
+          # Assuming you have a script to check the report for issues (e.g., using a tool like grep)
+          if grep -q 'Vulnerability Found' myreport*.html; then
+            echo "Security issues found in the scan report."
+            exit 1  # Exit with an error code to stop the workflow
+          else
+            echo "No security issues found in the scan report."
+          fi
+
+      - name: Publish Scan Report
+        if: failure() == false
+        uses: actions/upload-artifact@v2
+        with:
+          name: zap-scan-report
+          path: myreport*.html
