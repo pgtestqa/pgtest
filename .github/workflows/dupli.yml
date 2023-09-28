@@ -1,10 +1,10 @@
-name: CI
+name: CIN
 
 on:
   push:
-    branches: ['development']
+    branches: ['develop']
   pull_request:
-    branches: ['development']
+    branches: ['develop']
   workflow_dispatch:
 
 jobs:
@@ -13,18 +13,20 @@ jobs:
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v2 # Use the latest version of actions/checkout
+        uses: actions/checkout@v3
 
-      # Set Target URLs as an environment variable
+      # Define a list of target URLs
       - name: Set Target URLs
+        id: set-targets
         run: |
-          echo "TARGETS=https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge,https://front.questionnaire.ip-poc.com/app/home" >> $GITHUB_ENV
+          echo "::set-output name=targets::https://front.paymentgateway.ip-poc.com/app/payment-summary,https://front.questionnaire.ip-poc.com/app/home"
+        # You can modify the list of target URLs above as needed, separated by commas
 
       # Split the list of targets into an array
       - name: Split Target URLs
         id: split-targets
         run: |
-          IFS=',' read -ra TARGETS <<< "$TARGETS"
+          IFS=',' read -ra TARGETS <<< "${{ steps.set-targets.outputs.targets }}"
           for target in "${TARGETS[@]}"; do
             echo "Scanning target: $target"
             # Run the OWASP ZAP Baseline Scan for each target
