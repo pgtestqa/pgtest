@@ -1,0 +1,76 @@
+[
+  {
+    "description": "",
+    "elements": [
+      {
+        "description": "",
+        "id": "console-text;qr-code-generation",
+        "keyword": "Scenario",
+        "line": 25,
+        "name": "QR Code Generation",
+        "steps": [
+          {
+            "keyword": "Before",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 31840800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 27,
+            "name": "Open the url \"https://www.the-qrcode-generator.com/\"",
+            "match": {
+              "location": "src\\steps-definitions\\ConsoleText-steps.ts:24"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1639140000
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 28,
+            "name": "Input the text from file and save the QR Code",
+            "match": {
+              "location": "src\\steps-definitions\\ConsoleText-steps.ts:27"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 59414719000
+            }
+          },
+          {
+            "keyword": "After",
+            "hidden": true,
+            "result": {
+              "status": "passed",
+              "duration": 1194299
+            }
+          }
+        ],
+        "tags": [
+          {
+            "name": "@New",
+            "line": 1
+          }
+        ],
+        "type": "scenario"
+      }
+    ],
+    "id": "console-text",
+    "line": 2,
+    "keyword": "Feature",
+    "name": "Console Text",
+    "tags": [
+      {
+        "name": "@New",
+        "line": 1
+      }
+    ],
+    "uri": "src\\features\\ConsoleText.feature"
+  }
+]
