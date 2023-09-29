@@ -17,13 +17,12 @@ jobs:
       matrix:
         targets:
           - 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
-          # Add other target URLs as needed
 
     steps:
       - name: Set up Docker
         uses: docker/build-push-action@v2
         with:
-          context: . # Specify your build context if needed
+          context: .
           tags: |
             zap-baseline:latest # Specify the Docker image name and tag
 
