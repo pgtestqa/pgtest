@@ -12,8 +12,10 @@ jobs:
     strategy:
       matrix:
         targets:
-          - 'https://front.questionnaire.ip-poc.com/app/home'
-          - 'https://front.paymentgateway.ip-poc.com/app/payment-summary'
+          [
+            'https://front.questionnaire.ip-poc.com/app/home',
+            'https://front.paymentgateway.ip-poc.com/app/payment-summary',
+          ]
 
     steps:
       - name: Checkout code
@@ -36,7 +38,7 @@ jobs:
           for target in ${{ matrix.targets }}; do
             if grep -q 'Vulnerability Found' "zap-scan-report-${target//[:\/]/_}-"*.html; then
               echo "Security issues found in the scan report for target: $target."
-              exit 1 # Exit with an error code to stop the workflow
+              exit 1  # Exit with an error code to stop the workflow
             else
               echo "No security issues found in the scan report for target: $target."
             fi
