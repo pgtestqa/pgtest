@@ -5,49 +5,44 @@ on:
   pull_request:
     branches: ['develop']
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        targets:
+          [
+            'https://front.questionnaire.ip-poc.com/app/home',
+            'https://front.paymentgateway.ip-poc.com/app/payment-summary',
+          ]
+
     steps:
-      - uses: actions/checkout@v2 # Use actions/checkout@v2 for better compatibility
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      - name: OWASP ZAP Baseline Scan - Target URL
+      - name: OWASP ZAP Baseline Scan
+        id: zap-scan
         uses: zaproxy/action-baseline@v0.7.0
         with:
-          target: 'https://front.questionnaire.ip-poc.com/app/home'
+          target: ${{ matrix.targets }}
 
-      - name: Save Target URL Scan Report
+      - name: Save Scan Reports
         run: |
-          mv zap-baseline-report.html target-url-report-$(date +"%Y%m%d%H%M%S").html
+          for target in ${{ matrix.targets }}; do
+            mv zap-baseline-report.html "zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
+          done
 
-      - name: Check for Issues in Target URL Scan Report
+      - name: Check for Issues in Scan Reports
         run: |
-          if grep -q 'Vulnerability Found' target-url-report*.html; then
-            echo "Security issues found in the target URL scan report."
-            exit 1  # Exit with an error code to stop the workflow
-          else
-            echo "No security issues found in the target URL scan report."
-          fi
-
-      - name: OWASP ZAP Baseline Scan - Repository Code
-        uses: zaproxy/action-baseline@v0.7.0
-        with:
-          # You can specify the path to the code you want to scan
-          # For example, you can use '.' to scan the entire repository
-          target: '.'
-
-      - name: Save Repository Code Scan Report
-        run: |
-          mv zap-baseline-report.html repository-code-report-$(date +"%Y%m%d%H%M%S").html
-
-      - name: Check for Issues in Repository Code Scan Report
-        run: |
-          if grep -q 'Vulnerability Found' repository-code-report*.html; then
-            echo "Security issues found in the repository code scan report."
-            exit 1  # Exit with an error code to stop the workflow
-          else
-            echo "No security issues found in the repository code scan report."
-          fi
+          for target in ${{ matrix.targets }}; do
+            if grep -q 'Vulnerability Found' "zap-scan-report-${target//[:\/]/_}-"*.html; then
+              echo "Security issues found in the scan report for target: $target."
+              exit 1  # Exit with an error code to stop the workflow
+            else
+              echo "No security issues found in the scan report for target: $target."
+            fi
+          done
 
       - name: Publish Scan Reports
         if: failure() == false
@@ -55,5 +50,4 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            target-url-report*.html
-            repository-code-report*.html
+            zap-scan-report-*.html
