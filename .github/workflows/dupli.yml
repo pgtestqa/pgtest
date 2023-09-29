@@ -34,7 +34,7 @@ jobs:
         with:
           # You can specify the path to the code you want to scan
           # For example, you can use '.' to scan the entire repository
-          target: .
+          target: '.'
 
       - name: Save Repository Code Scan Report
         run: |
