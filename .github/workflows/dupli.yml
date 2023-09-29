@@ -20,13 +20,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-        with:
-          submodules: 'recursive'
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '16'
 
       - name: OWASP ZAP Baseline Scan
         id: zap-scan
@@ -37,14 +30,13 @@ jobs:
       - name: Save Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            # Run OWASP ZAP Baseline Scan for each target
-            docker run -t owasp/zap2docker-stable zap-baseline.py -t "$target" -g gen.conf -r "zap-baseline-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
+            mv zap-baseline-report.html "zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
           done
 
       - name: Check for Issues in Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            if grep -q 'Vulnerability Found' "zap-baseline-report-${target//[:\/]/_}-"*.html; then
+            if grep -q 'Vulnerability Found' "zap-scan-report-${target//[:\/]/_}-"*.html; then
               echo "Security issues found in the scan report for target: $target."
               exit 1  # Exit with an error code to stop the workflow
             else
@@ -58,4 +50,4 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            zap-baseline-report-*.html
+            zap-scan-report-*.html
