@@ -27,25 +27,32 @@ jobs:
         with:
           target: ${{ matrix.targets }}
 
-      - name: Save Scan Report for Target 1
-        if: matrix.targets[0] == 'https://front.questionnaire.ip-poc.com/app/home'
-        run: mv zap-baseline-report.html zap-scan-report-target1-$(date +"%Y%m%d%H%M%S").html
-
-      - name: Save Scan Report for Target 2
-        if: matrix.targets[1] == 'https://front.paymentgateway.ip-poc.com/app/payment-summary'
-        run: mv zap-baseline-report.html zap-scan-report-target2-$(date +"%Y%m%d%H%M%S").html
+      - name: Save Scan Reports
+        run: |
+          for target in ${{ matrix.targets }}; do
+            report_filename="zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
+            mv zap-baseline-report.html "$report_filename"
+            echo "::set-output name=report_${target//[:\/]/_}::$report_filename"
+          done
 
       - name: Check for Issues in Scan Reports
+        id: check-issues
         run: |
+          security_issues_found=false
           for target in ${{ matrix.targets }}; do
             report_filename="zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
             if grep -q 'Vulnerability Found' "$report_filename"; then
               echo "Security issues found in the scan report for target: $target."
-              exit 1  # Exit with an error code to stop the workflow
+              security_issues_found=true
             else
               echo "No security issues found in the scan report for target: $target."
             fi
           done
+          echo "::set-output name=security_issues::$security_issues_found"
+
+      - name: Fail on Security Issues
+        if: steps.check-issues.outputs.security_issues == 'true'
+        run: exit 1
 
       - name: Publish Scan Reports
         if: failure() == false
@@ -53,4 +60,4 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            zap-scan-report-target*.html
+            zap-scan-report-*.html
