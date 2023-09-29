@@ -9,6 +9,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    container:
+      image: your-custom-zap-container:latest # Replace with the name of your custom Docker container
+      options: --user root # Run the container as root to install packages (if needed)
+
     strategy:
       matrix:
         targets:
@@ -18,12 +22,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
-
-      - name: Install OWASP ZAP
-        run: |
-          # Install OWASP ZAP using apt-get
-          sudo apt-get update
-          sudo apt-get install -y zaproxy
 
       - name: Set Scan Status
         id: set-scan-status
