@@ -1,4 +1,4 @@
-name: CI
+name: API Security Scan
 
 on:
   push:
@@ -10,55 +10,36 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  api_security_scan:
     runs-on: ubuntu-latest
 
-    strategy:
-      matrix:
-        targets:
-          - 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
-
     steps:
-      - name: Set up Docker
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          tags: |
-            zap-baseline:latest # Specify the Docker image name and tag
-
-      - name: Check Docker Version
-        run: docker --version
-
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: OWASP ZAP Baseline Scan
+      - name: OWASP ZAP API Scan
         id: zap-scan
         uses: zaproxy/action-api-scan@v0.5.0
         with:
-          target: ${{ matrix.targets }}
+          target: 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
 
-      - name: Save Scan Reports
+      - name: Save Scan Report
         run: |
-          for target in ${{ matrix.targets }}; do
-            mv zap-baseline-report.html "zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
-          done
+          mv zap-api-scan-report.json "zap-scan-report-$(date +"%Y%m%d%H%M%S").json"
 
-      - name: Check for Issues in Scan Reports
+      - name: Check for Issues in Scan Report
         run: |
-          for target in ${{ matrix.targets }}; do
-            if grep -q 'Vulnerability Found' "zap-scan-report-${target//[:\/]/_}-"*.html; then
-              echo "Security issues found in the scan report for target: $target."
-              exit 1 # Exit with an error code to stop the workflow
-            else
-              echo "No security issues found in the scan report for target: $target."
-            fi
-          done
+          if jq -e '.alerts | length > 0' "zap-scan-report-"*.json; then
+            echo "Security issues found in the scan report."
+            exit 1 # Exit with an error code to stop the workflow
+          else
+            echo "No security issues found in the scan report."
+          fi
 
-      - name: Publish Scan Reports
+      - name: Publish Scan Report
         if: failure() == false
         uses: actions/upload-artifact@v2
         with:
-          name: zap-scan-reports
+          name: zap-scan-report
           path: |
-            zap-scan-report-*.html
+            zap-scan-report-*.json
