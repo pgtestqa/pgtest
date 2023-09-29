@@ -12,8 +12,7 @@ jobs:
     strategy:
       matrix:
         targets:
-          - 'https://front.questionnaire.ip-poc.com/app/home'
-          - 'https://front.paymentgateway.ip-poc.com/app/payment-summary'
+          - 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
 
     steps:
       - name: Start Docker
