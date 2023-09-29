@@ -17,7 +17,7 @@ export default class Append extends BasePage {
     super(page);
     this.fieldconfig = fieldconfig;
   }
-//new
+
   public async appendData() {
     const pagesToUpdate: PageInfo[] = Object.entries(readFromYamlFilePath('Pages'))
       .map(([name, filePath]) => ({ name, filePath }));
