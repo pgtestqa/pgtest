@@ -12,46 +12,33 @@ jobs:
     strategy:
       matrix:
         targets:
-          [
-            'https://front.questionnaire.ip-poc.com/app/home',
-            'https://front.paymentgateway.ip-poc.com/app/payment-summary',
-          ]
+          - 'https://front.questionnaire.ip-poc.com/app/home'
+          - 'https://front.paymentgateway.ip-poc.com/app/payment-summary'
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: OWASP ZAP Baseline Scan
-        id: zap-scan
-        uses: zaproxy/action-baseline@v0.7.0
-        with:
-          target: ${{ matrix.targets }}
+      - name: Set Scan Status
+        id: set-scan-status
+        run: echo "::set-output name=scan_status::success"
 
-      - name: Save Scan Reports
+      - name: Scan Targets
+        id: scan-targets
         run: |
           for target in ${{ matrix.targets }}; do
-            report_filename="zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
-            mv zap-baseline-report.html "$report_filename"
-            echo "::set-output name=report_${target//[:\/]/_}::$report_filename"
-          done
-
-      - name: Check for Issues in Scan Reports
-        id: check-issues
-        run: |
-          security_issues_found=false
-          for target in ${{ matrix.targets }}; do
-            report_filename="zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
-            if grep -q 'Vulnerability Found' "$report_filename"; then
+            echo "Scanning target: $target"
+            zap-baseline.py -t "$target"
+            if [ $? -ne 0 ]; then
               echo "Security issues found in the scan report for target: $target."
-              security_issues_found=true
+              echo "::set-output name=scan_status::failure"
             else
               echo "No security issues found in the scan report for target: $target."
             fi
           done
-          echo "::set-output name=security_issues::$security_issues_found"
 
       - name: Fail on Security Issues
-        if: steps.check-issues.outputs.security_issues == 'true'
+        if: steps.set-scan-status.outputs.scan_status == 'failure'
         run: exit 1
 
       - name: Publish Scan Reports
@@ -60,4 +47,4 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            zap-scan-report-*.html
+            zap-baseline-report-*.html
