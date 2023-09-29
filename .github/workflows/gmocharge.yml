@@ -21,10 +21,11 @@ jobs:
 
     steps:
       - name: Set up Docker
-        uses: docker/setup-action@v2
+        uses: docker/build-push-action@v2
         with:
-          dockerfile: Dockerfile # Optional: Specify your Dockerfile if needed
-          context: . # Optional: Specify the build context if needed
+          context: . # Specify your build context if needed
+          tags: |
+            zap-baseline:latest # Specify the Docker image name and tag
 
       - name: Check Docker Version
         run: docker --version
