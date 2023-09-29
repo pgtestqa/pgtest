@@ -9,10 +9,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: your-custom-zap-container:latest # Replace with the name of your custom Docker container
-      options: --user root # Run the container as root to install packages (if needed)
-
     strategy:
       matrix:
         targets:
@@ -23,27 +19,28 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Set Scan Status
-        id: set-scan-status
-        run: echo "::set-output name=scan_status::success"
+      - name: OWASP ZAP Baseline Scan
+        id: zap-scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: ${{ matrix.targets }}
 
-      - name: Scan Targets
-        id: scan-targets
+      - name: Save Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            echo "Scanning target: $target"
-            zap-baseline.py -t "$target"
-            if [ $? -ne 0 ]; then
+            mv zap-baseline-report.html "zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
+          done
+
+      - name: Check for Issues in Scan Reports
+        run: |
+          for target in ${{ matrix.targets }}; do
+            if grep -q 'Vulnerability Found' "zap-scan-report-${target//[:\/]/_}-"*.html; then
               echo "Security issues found in the scan report for target: $target."
-              echo "::set-output name=scan_status::failure"
+              exit 1 # Exit with an error code to stop the workflow
             else
               echo "No security issues found in the scan report for target: $target."
             fi
           done
-
-      - name: Fail on Security Issues
-        if: steps.set-scan-status.outputs.scan_status == 'failure'
-        run: exit 1
 
       - name: Publish Scan Reports
         if: failure() == false
@@ -51,4 +48,4 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            zap-baseline-report-*.html
+            zap-scan-report-*.html
