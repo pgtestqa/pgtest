@@ -19,6 +19,12 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
+      - name: Install OWASP ZAP
+        run: |
+          # Install OWASP ZAP using apt-get
+          sudo apt-get update
+          sudo apt-get install -y zaproxy
+
       - name: Set Scan Status
         id: set-scan-status
         run: echo "::set-output name=scan_status::success"
