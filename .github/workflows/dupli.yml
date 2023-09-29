@@ -27,16 +27,19 @@ jobs:
         with:
           target: ${{ matrix.targets }}
 
-      - name: Save Scan Reports
-        run: |
-          for target in ${{ matrix.targets }}; do
-            mv zap-baseline-report.html "zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
-          done
+      - name: Save Scan Report for Target 1
+        if: matrix.targets[0] == 'https://front.questionnaire.ip-poc.com/app/home'
+        run: mv zap-baseline-report.html zap-scan-report-target1-$(date +"%Y%m%d%H%M%S").html
+
+      - name: Save Scan Report for Target 2
+        if: matrix.targets[1] == 'https://front.paymentgateway.ip-poc.com/app/payment-summary'
+        run: mv zap-baseline-report.html zap-scan-report-target2-$(date +"%Y%m%d%H%M%S").html
 
       - name: Check for Issues in Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            if grep -q 'Vulnerability Found' "zap-scan-report-${target//[:\/]/_}-"*.html; then
+            report_filename="zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
+            if grep -q 'Vulnerability Found' "$report_filename"; then
               echo "Security issues found in the scan report for target: $target."
               exit 1  # Exit with an error code to stop the workflow
             else
@@ -50,4 +53,4 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            zap-scan-report-*.html
+            zap-scan-report-target*.html
