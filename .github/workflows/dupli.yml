@@ -2,10 +2,10 @@ name: CI
 on:
   push:
     branches:
-      - 'develop'
+      - 'development'
   pull_request:
     branches:
-      - 'develop'
+      - 'development'
   workflow_dispatch:
 
 jobs:
@@ -33,16 +33,17 @@ jobs:
             echo "Security issues found in the scan report."
           else
             echo "No security issues found in the scan report."
+            echo "::set-output name=security-issues::false"
           fi
 
       - name: Prevent code update on security issues
-        if: steps.check-issues.outputs['check-issues'] == 'Security issues found in the scan report.'
+        if: steps.check-issues.outputs.security-issues == 'true'
         run: |
           echo "Security issues found. Code update is not allowed."
           exit 1
 
       - name: Publish Scan Report
-        if: steps.check-issues.outputs['check-issues'] == 'No security issues found in the scan report.'
+        if: steps.check-issues.outputs.security-issues == 'false'
         uses: actions/upload-artifact@v2
         with:
           name: zap-scan-report
