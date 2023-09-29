@@ -1,51 +1,59 @@
 name: CI
 on:
   push:
-    branches:
-      - 'develop'
+    branches: ['develop']
   pull_request:
-    branches:
-      - 'develop'
+    branches: ['develop']
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2 # Use actions/checkout@v2 for better compatibility
 
-      - name: OWASP ZAP Baseline Scan
-        id: zap-scan
+      - name: OWASP ZAP Baseline Scan - Target URL
         uses: zaproxy/action-baseline@v0.7.0
         with:
           target: 'https://front.questionnaire.ip-poc.com/app/home'
 
-      - name: Save Scan Report
+      - name: Save Target URL Scan Report
         run: |
-          mv zap-baseline-report.html myreport-$(date +"%Y%m%d%H%M%S").html
+          mv zap-baseline-report.html target-url-report-$(date +"%Y%m%d%H%M%S").html
 
-      - name: Check for Issues in Scan Report
-        id: check-issues
+      - name: Check for Issues in Target URL Scan Report
         run: |
-          if grep -q 'Vulnerability Found' myreport*.html; then
-            echo "Security issues found in the scan report."
-            echo "::set-output name=security-issues::true"
+          if grep -q 'Vulnerability Found' target-url-report*.html; then
+            echo "Security issues found in the target URL scan report."
+            exit 1  # Exit with an error code to stop the workflow
           else
-            echo "No security issues found in the scan report."
-            echo "::set-output name=security-issues::false"
+            echo "No security issues found in the target URL scan report."
           fi
 
-      - name: Stop workflow on security issues
-        if: steps.check-issues.outputs.security-issues == 'true'
-        run: |
-          echo "Security issues found. Stopping the workflow."
-          exit 1
+      - name: OWASP ZAP Baseline Scan - Repository Code
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          # You can specify the path to the code you want to scan
+          # For example, you can use '.' to scan the entire repository
+          target: .
 
-      - name: Publish Scan Report
-        if: steps.check-issues.outputs.security-issues == 'false'
+      - name: Save Repository Code Scan Report
+        run: |
+          mv zap-baseline-report.html repository-code-report-$(date +"%Y%m%d%H%M%S").html
+
+      - name: Check for Issues in Repository Code Scan Report
+        run: |
+          if grep -q 'Vulnerability Found' repository-code-report*.html; then
+            echo "Security issues found in the repository code scan report."
+            exit 1  # Exit with an error code to stop the workflow
+          else
+            echo "No security issues found in the repository code scan report."
+          fi
+
+      - name: Publish Scan Reports
+        if: failure() == false
         uses: actions/upload-artifact@v2
         with:
-          name: zap-scan-report
-          path: myreport*.html
+          name: zap-scan-reports
+          path: |
+            target-url-report*.html
+            repository-code-report*.html
