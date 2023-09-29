@@ -1,10 +1,11 @@
-name: CIN
-
+name: CI
 on:
   push:
-    branches: ['develop']
+    branches:
+      - 'develop'
   pull_request:
-    branches: ['develop']
+    branches:
+      - 'develop'
   workflow_dispatch:
 
 jobs:
@@ -12,53 +13,37 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-      # Define a list of target URLs
-      - name: Set Target URLs
-        id: set-targets
+      - name: OWASP ZAP Baseline Scan
+        id: zap-scan
+        uses: zaproxy/action-baseline@v0.7.0
+        with:
+          target: 'https://front.questionnaire.ip-poc.com/app/home'
+
+      - name: Save Scan Report
         run: |
-          echo "::set-output name=targets::https://front.paymentgateway.ip-poc.com/app/payment-summary,https://front.questionnaire.ip-poc.com/app/home"
-        # You can modify the list of target URLs above as needed, separated by commas
+          mv zap-baseline-report.html myreport-$(date +"%Y%m%d%H%M%S").html
 
-      # Split the list of targets into an array
-      - name: Split Target URLs
-        id: split-targets
+      - name: Check for Issues in Scan Report
+        id: check-issues
         run: |
-          IFS=',' read -ra TARGETS <<< "${{ steps.set-targets.outputs.targets }}"
-          for target in "${TARGETS[@]}"; do
-            echo "Scanning target: $target"
-            # Run the OWASP ZAP Baseline Scan for each target
-            # Adjust the ZAP command accordingly to use the $target variable
-            docker run -d -p 8080:8080 owasp/zap2docker-stable zap.sh -daemon -port 8080 -host 0.0.0.0 -config api.disablekey=true -target "$target"
-          done
+          if grep -q 'Vulnerability Found' myreport*.html; then
+            echo "Security issues found in the scan report."
+          else
+            echo "No security issues found in the scan report."
+          fi
 
-      # Add your OWASP ZAP Baseline Scan step here (if needed)
-
-      # Add the steps to save, check, and publish the scan reports here
-      - name: Save Scan Reports
+      - name: Prevent code update on security issues
+        if: steps.check-issues.outputs['check-issues'] == 'Security issues found in the scan report.'
         run: |
-          # Rename the report files to something unique
-          for target in "${TARGETS[@]}"; do
-            mv zap-baseline-report.html "myreport-$(date +"%Y%m%d%H%M%S")-$target.html"
-          done
+          echo "Security issues found. Code update is not allowed."
+          exit 1
 
-      - name: Check for Issues in Scan Reports
-        run: |
-          # Assuming you have a script to check the report for issues (e.g., using a tool like grep)
-          for target in "${TARGETS[@]}"; do
-            if grep -q 'Vulnerability Found' "myreport-*$target.html"; then
-              echo "Security issues found in the scan report for $target."
-              exit 1  # Exit with an error code to stop the workflow
-            else
-              echo "No security issues found in the scan report for $target."
-            fi
-          done
-
-      - name: Publish Scan Reports
-        if: failure() == false
+      - name: Publish Scan Report
+        if: steps.check-issues.outputs['check-issues'] == 'No security issues found in the scan report.'
         uses: actions/upload-artifact@v2
         with:
-          name: zap-scan-reports
-          path: mynewreport-*.html
+          name: zap-scan-report
+          path: myreport*.html
