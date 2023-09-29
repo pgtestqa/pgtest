@@ -9,7 +9,7 @@ interface PageInfo {
   name: string;
   filePath: string;
 }
-
+//class
 export default class Append extends BasePage {
   fieldconfig!: FieldConfig;
 
