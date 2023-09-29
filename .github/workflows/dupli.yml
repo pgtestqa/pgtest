@@ -2,10 +2,10 @@ name: CI
 on:
   push:
     branches:
-      - 'develop'
+      - 'development'
   pull_request:
     branches:
-      - 'develop'
+      - 'development'
   workflow_dispatch:
 
 jobs:
@@ -31,15 +31,16 @@ jobs:
         run: |
           if grep -q 'Vulnerability Found' myreport*.html; then
             echo "Security issues found in the scan report."
+            echo "::set-output name=security-issues::true"
           else
             echo "No security issues found in the scan report."
             echo "::set-output name=security-issues::false"
           fi
 
-      - name: Prevent code update on security issues
+      - name: Stop workflow on security issues
         if: steps.check-issues.outputs.security-issues == 'true'
         run: |
-          echo "Security issues found. Code update is not allowed."
+          echo "Security issues found. Stopping the workflow."
           exit 1
 
       - name: Publish Scan Report
