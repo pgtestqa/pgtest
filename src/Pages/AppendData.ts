@@ -9,7 +9,7 @@ interface PageInfo {
   name: string;
   filePath: string;
 }
-//class
+
 export default class Append extends BasePage {
   fieldconfig!: FieldConfig;
 
@@ -17,7 +17,7 @@ export default class Append extends BasePage {
     super(page);
     this.fieldconfig = fieldconfig;
   }
-
+//method
   public async appendData() {
     const pagesToUpdate: PageInfo[] = Object.entries(readFromYamlFilePath('Pages'))
       .map(([name, filePath]) => ({ name, filePath }));
