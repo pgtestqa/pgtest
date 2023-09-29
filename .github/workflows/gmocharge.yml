@@ -14,6 +14,7 @@ jobs:
       - name: OWASP ZAP Scan
         uses: zaproxy/action-api-scan@v0.5.0
         with:
+          format: openapi
           target: 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
 
       - name: Save Scan Report
