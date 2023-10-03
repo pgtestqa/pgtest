@@ -1,4 +1,5 @@
-name: API
+name: API CI
+
 on:
   push:
     branches: ['develop']
@@ -10,22 +11,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Use Node.js 16
-        uses: actions/setup-node@v2
-        with:
-          node-version: 16
-
-      - name: Checkout code
-        uses: actions/checkout@v2
-
-      - name: OWASP ZAP API Scan
-        id: zap-scan
-        uses: zaproxy/action-api-scan@v0.5.0
-        with:
-          target: 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
-
-      # Step 1: Fetch API Data using curl
-      - name: Fetch API Data
+      - name: Fetch API Data using curl
         run: |
           curl --location 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge' \
             --header 'Content-Type: application/json' \
@@ -67,6 +53,12 @@ jobs:
                 "maskedCardNo": "410000*******100"
             }'
 
+      - name: OWASP ZAP API Scan
+        id: zap-scan
+        uses: zaproxy/action-api-scan@v0.5.0
+        with:
+          target: 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
+
       - name: Save Scan Report
         run: |
           mv zap-api-scan-report.json "zap-scan-report-$(date +"%Y%m%d%H%M%S").json"
@@ -86,4 +78,4 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            zap-scan-report-*.json
+            zap-scan-report-*.html
