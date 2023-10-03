@@ -1,0 +1,89 @@
+name: API
+on:
+  push:
+    branches: ['develop']
+  pull_request:
+    branches: ['develop']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Use Node.js 16
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: OWASP ZAP API Scan
+        id: zap-scan
+        uses: zaproxy/action-api-scan@v0.5.0
+        with:
+          target: 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
+
+      # Step 1: Fetch API Data using curl
+      - name: Fetch API Data
+        run: |
+          curl --location 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge' \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "order": {
+                    "amount": "1000",
+                    "currency": "JPY",
+                    "transactionType": "1",
+                    "address": {
+                        "name": "見本 太郎",
+                        "line1": "道玄坂1丁目2-3",
+                        "line2": "渋谷ビル1F",
+                        "line3": "1号室",
+                        "city": "渋谷区",
+                        "state": "001",
+                        "postCode": "150-0043",
+                        "country": "392"
+                    }
+                },
+                "payer": {
+                    "name": "見本 太郎",
+                    "nameKana": "ミホン　タロウ",
+                    "nameAlphabet": "Taro Mihon",
+                    "email": "taro.mihon@example.com",
+                    "phones": {
+                        "type": "1",
+                        "countryCode": "81",
+                        "number": "09012345678"
+                    },
+                    "accountId": "account_123",
+                    "ip": "172.16.0.1",
+                    "deviceType": "1",
+                    "locale": "ja_JP"
+                },
+                "cardToken": "78c072da1c2c806ce636008522a199615841c16ea2c8d6ec8581b207bac0bdd1",
+                "paymentMethod": "1",
+                "paymentGatewayType": "GMO",
+                "chargeType": "1",
+                "maskedCardNo": "410000*******100"
+            }'
+
+      - name: Save Scan Report
+        run: |
+          mv zap-api-scan-report.json "zap-scan-report-$(date +"%Y%m%d%H%M%S").json"
+
+      - name: Check for Issues in Scan Report
+        run: |
+          if jq -e '.alerts | length > 0' "zap-scan-report-"*.json; then
+            echo "Security issues found in the scan report."
+            exit 1 # Exit with an error code to stop the workflow
+          else
+            echo "No security issues found in the scan report."
+          fi
+
+      - name: Publish Scan Reports
+        if: failure() == false
+        uses: actions/upload-artifact@v2
+        with:
+          name: zap-scan-reports
+          path: |
+            zap-scan-report-*.json
