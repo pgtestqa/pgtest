@@ -2,15 +2,23 @@ name: API CI
 
 on:
   push:
-    branches: ['development']
+    branches: ['develop']
   pull_request:
-    branches: ['development']
+    branches: ['develop']
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      - name: Add IP Address to Security Group
+        run: |
+          # Fetch public IP address of the runner
+          PUBLIC_IP=$(curl -s https://api64.ipify.org?format=json | jq -r .ip)
+
+          # Add the public IP address to your security group rules
+          aws ec2 authorize-security-group-ingress --group-id your-security-group-id --protocol tcp --port 443 --cidr "$PUBLIC_IP/32"
+
       - name: Fetch API Data using curl
         run: |
           curl --location 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge' \
