@@ -1,0 +1,95 @@
+name: CI DGFT Charge
+
+on:
+  push:
+    branches: ['developme']
+  pull_request:
+    branches: ['developme']
+  workflow_dispatch:
+    inputs:
+      api-url:
+        description: 'API URL'
+        required: true
+        default: 'https://bff.paymentgateway.ip-poc.com/bff/v1/gmo-charge'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ap-northeast-1
+          role-to-assume: arn:aws:iam::358859468488:role/gmo-dgft_security_test_role
+          role-skip-session-tagging: true
+
+      - name: Add IP Address
+        env:
+          SECURITY_GROUP_ID: sg-09b0210df2494ea67
+        run: |
+          # Public IP (GitHub Actions)
+          IP_ADDRESS=$(curl ifconfig.io)
+
+          # Add IP Address to Security Group Ingress
+          aws ec2 authorize-security-group-ingress --group-id sg-09b0210df2494ea67 --protocol tcp --port 443 --cidr "$IP_ADDRESS"/32
+
+      - name: Make API Request with curl
+        run: |
+          API_URL="${{ github.event.inputs.api-url }}"
+
+          curl --location "$API_URL" \
+            --header 'Content-Type: application/json' \
+            --data-raw '{
+                "address": {
+                    "city": "Malapurem",
+                    "country": "392",
+                    "email": "hafis+1@gmail.com",
+                    "line1": "eeeeee",
+                    "line2": "rerer",
+                    "line3": "rererere",
+                    "name": "Hafis",
+                    "phone": "5555555555",
+                    "postalCode": "1500043",
+                    "state": "013"
+                },
+                "amount": "1000",
+                "chargeType": "1",
+                "currency": "JPY",
+                "deviceType": "1",
+                "locale": "ja_JP",
+                "maskedCardNo": "377752*******04",
+                "paymentGatewayType": "DGFT",
+                "paymentMethod": "1",
+                "token": "0a22cc7e-08f1-47de-9d05-03dd6992b561",
+                "transactionType": "1"
+            }'
+
+      - name: OWASP ZAP Scan
+        uses: zaproxy/action-api-scan@v0.5.0
+
+      - name: Save Scan Report
+        run: |
+          # Rename the report file to something unique
+          mv zap-baseline-report.html myreport-$(date +"%Y%m%d%H%M%S").html
+
+      - name: Check for Issues in Scan Report
+        run: |
+          # Assuming you have a script to check the report for issues (e.g., using a tool like grep)
+          if grep -q 'Vulnerability Found' myreport*.html; then
+            echo "Security issues found in the scan report."
+            exit 1  # Exit with an error code to stop the workflow
+          else
+            echo "No security issues found in the scan report."
+          fi
+
+      - name: Publish Scan Report
+        if: failure() == false
+        uses: actions/upload-artifact@v2
+        with:
+          name: zap-scan-report
+          path: myreport*.html
