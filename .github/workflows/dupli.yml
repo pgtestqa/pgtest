@@ -11,11 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        targets:
-          [
-            'https://front.paymentgateway.ip-poc.com/app/payment-summary',
-            'https://front.questionnaire.ip-poc.com/app/home',
-          ]
+        targets: ['https://front.questionnaire.ip-poc.com/app/home']
 
     steps:
       - name: Checkout code
