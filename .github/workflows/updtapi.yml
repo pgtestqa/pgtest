@@ -2,9 +2,9 @@ name: CI DGFT Charge
 
 on:
   push:
-    branches: ['development']
+    branches: ['developme']
   pull_request:
-    branches: ['development']
+    branches: ['developme']
   workflow_dispatch:
     inputs:
       api-url:
