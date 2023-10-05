@@ -2,9 +2,9 @@ name: CI DGFT Charge
 
 on:
   push:
-    branches: ['developme']
+    branches: ['development']
   pull_request:
-    branches: ['developme']
+    branches: ['development']
   workflow_dispatch:
     inputs:
       api-url:
@@ -15,9 +15,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-      contents: read
+    permissions: write-all
     steps:
       - uses: actions/checkout@v3
 
@@ -75,12 +73,12 @@ jobs:
       - name: Save Scan Report
         run: |
           # Rename the report file to something unique
-          mv zap-baseline-report.html myreport-$(date +"%Y%m%d%H%M%S").html
+          mv report_html.html myreport-$(date +"%Y%m%d%H%M%S").html
 
       - name: Check for Issues in Scan Report
         run: |
           # Assuming you have a script to check the report for issues (e.g., using a tool like grep)
-          if grep -q 'Vulnerability Found' myreport*.html; then
+          if grep -q 'Description' myreport*.html; then
             echo "Security issues found in the scan report."
             exit 1  # Exit with an error code to stop the workflow
           else
