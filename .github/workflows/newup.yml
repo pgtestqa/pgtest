@@ -54,7 +54,7 @@ jobs:
         run: |
           ISSUE_BODY="Security issues were found in the scan report. See the attached scan report artifacts for details."
           curl -X POST \
-          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          -H "Accept: application/vnd.github.v3+json" \
-          -d '{"title": "Security Issues Found", "body": "'"$ISSUE_BODY"'"}' \
-          "https://api.github.com/repos/${{ github.repository }}/issues"
+           -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+           -H "Accept: application/vnd.github.v3+json" \
+           -d '{"title": "Security Issues Found", "body": "'"$ISSUE_BODY"'"}' \
+           "https://api.github.com/repos/${{ github.repository }}/issues"
