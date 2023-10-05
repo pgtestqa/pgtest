@@ -41,7 +41,7 @@ jobs:
           done
 
       - name: Publish Scan Reports
-        if: failure() == false
+        if: failure() == true
         uses: actions/upload-artifact@v2
         with:
           name: zap-scan-reports
