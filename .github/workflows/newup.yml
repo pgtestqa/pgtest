@@ -36,6 +36,7 @@ jobs:
             if grep -q 'Description' "zap-scan-report-${target//[:\/]/_}-"*.html; then
               echo "Security issues found in the scan report for target: $target."
               echo "::set-output name=issues-found::true"  # Set an output variable to indicate issues found
+              exit 1  # Exit with an error code to stop the workflow
             else
               echo "No security issues found in the scan report for target: $target."
             fi
