@@ -35,12 +35,15 @@ jobs:
           done
 
       - name: Check for Issues in Scan Reports
+        id: check-for-issues
         run: |
           for target in ${{ matrix.targets }}; do
             if grep -q 'Description' "myreport-"*.html; then
               echo "Security issues found in the scan report for target: $target."
+              echo "::set-output name=issues-found::true"  # Set an output variable to indicate issues found
             else
               echo "No security issues found in the scan report for target: $target."
+              echo "::set-output name=issues-found::false"  # Set an output variable to indicate no issues found
             fi
           done
 
@@ -52,16 +55,12 @@ jobs:
           path: |
             myreport-*.html
 
-      - name: Check for Issues in Scan Reports
-        id: check-for-issues
+      - name: Create GitHub Issue
+        if: steps.check-for-issues.outputs.issues-found == 'true'
         run: |
-          for target in ${{ matrix.targets }}; do
-            if grep -q 'Description' "myreport-"*.html; then
-              echo "Security issues found in the scan report for target: $target."
-              echo "::set-output name=issues-found::true"  # Set the output variable
-              exit 1  # Exit with an error code to stop the workflow
-            else
-              echo "No security issues found in the scan report for target: $target."
-              echo "::set-output name=issues-found::false"  # Set the output variable
-            fi
-          done
+          ISSUE_BODY="Security issues were found in the scan report. See the attached scan report artifacts for details."
+          curl -X POST \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github.v3+json" \
+            -d '{"title": "Security Issues Found", "body": "'"$ISSUE_BODY"'"}' \
+            "https://api.github.com/repos/${{ github.repository }}/issues"
