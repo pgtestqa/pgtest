@@ -37,7 +37,7 @@ jobs:
       - name: Check for Issues in Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            if grep -q 'Description' "myreport-${target//[:\/]/_}-"*.html; then
+            if grep -q 'Description' "myreport-"*.html; then
               echo "Security issues found in the scan report for target: $target."
             else
               echo "No security issues found in the scan report for target: $target."
@@ -56,7 +56,7 @@ jobs:
         id: check-for-issues
         run: |
           for target in ${{ matrix.targets }}; do
-            if grep -q 'Description' "myreport-${target//[:\/]/_}-"*.html; then
+            if grep -q 'Description' "myreport-"*.html; then
               echo "Security issues found in the scan report for target: $target."
               echo "::set-output name=issues-found::true"  # Set the output variable
               exit 1  # Exit with an error code to stop the workflow
