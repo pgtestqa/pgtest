@@ -26,14 +26,14 @@ jobs:
       - name: Save Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            mv report_html.html "zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
+            mv report_html.html "myreport-$(date +"%Y%m%d%H%M%S").html"
           done
 
       - name: Check for Issues in Scan Reports
         id: check-issues
         run: |
           for target in ${{ matrix.targets }}; do
-            if grep -q 'Description' "zap-scan-report-${target//[:\/]/_}-"*.html; then
+            if grep -q 'Description' "myreport-"*.html; then
               echo "Security issues found in the scan report for target: $target."
               echo "::set-output name=issues-found::true"  # Set an output variable to indicate issues found
               exit 1  # Exit with an error code to stop the workflow
@@ -41,14 +41,13 @@ jobs:
               echo "No security issues found in the scan report for target: $target."
             fi
           done
-        shell: bash
 
       - name: Publish Scan Reports
         if: failure() == true
         uses: actions/upload-artifact@v2
         with:
           name: zap-scan-reports
-          path: zap-scan-report-*.html
+          path: myreport-*.html
 
       - name: Create GitHub Issue
         if: steps.check-issues.outputs.issues-found == 'true'
