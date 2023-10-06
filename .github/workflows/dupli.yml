@@ -1,9 +1,12 @@
 name: CI
+
 on:
   push:
-    branches: ['developm']
+    branches:
+      - develop
   pull_request:
-    branches: ['developm']
+    branches:
+      - develop
   workflow_dispatch:
 
 jobs:
@@ -28,15 +31,14 @@ jobs:
       - name: Save Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            mv report_html.html "zap-scan-report-${target//[:\/]/_}-$(date +"%Y%m%d%H%M%S").html"
+            mv report_html.html "myreport-$(date +"%Y%m%d%H%M%S").html"
           done
 
       - name: Check for Issues in Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
-            if grep -q 'Description' "zap-scan-report-${target//[:\/]/_}-"*.html; then
+            if grep -q 'Description' "myreport-${target//[:\/]/_}-"*.html; then
               echo "Security issues found in the scan report for target: $target."
-              exit 1  # Exit with an error code to stop the workflow
             else
               echo "No security issues found in the scan report for target: $target."
             fi
@@ -48,4 +50,18 @@ jobs:
         with:
           name: zap-scan-reports
           path: |
-            zap-scan-report-*.html
+            myreport-*.html
+
+      - name: Check for Issues in Scan Reports
+        id: check-for-issues
+        run: |
+          for target in ${{ matrix.targets }}; do
+            if grep -q 'Description' "myreport-${target//[:\/]/_}-"*.html; then
+              echo "Security issues found in the scan report for target: $target."
+              echo "::set-output name=issues-found::true"  # Set the output variable
+              exit 1  # Exit with an error code to stop the workflow
+            else
+              echo "No security issues found in the scan report for target: $target."
+              echo "::set-output name=issues-found::false"  # Set the output variable
+            fi
+          done
