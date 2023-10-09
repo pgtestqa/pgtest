@@ -28,6 +28,10 @@ jobs:
         with:
           target: ${{ matrix.targets }}
 
+      - name: Check JSON File Content
+        run: |
+          cat report_json.json
+
       - name: Save Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
