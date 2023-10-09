@@ -28,15 +28,11 @@ jobs:
         with:
           target: ${{ matrix.targets }}
 
-      - name: Check JSON File Content
-        run: |
-          cat report_json.json
-
       - name: Save Scan Reports
         run: |
           for target in ${{ matrix.targets }}; do
             mv report_html.html "myreport-$(date +"%Y%m%d%H%M%S").html"
-            mv report_json.json "./myjsonreport-$(date +"%Y%m%d%H%M%S").json"
+            mv report_json.json "myjsonreport-$(date +"%Y%m%d%H%M%S").json"
            done
 
       - name: Check for Issues in Scan Report
@@ -44,7 +40,7 @@ jobs:
         run: |
           for target in ${{ matrix.targets }}; do
           echo "Checking scan report for $target"
-          jq_result=$(jq '.site[].alerts' "./myjsonreport-$(date +"%Y%m%d%H%M%S").json")
+          jq_result=$(jq '.site[].alerts' "myjsonreport-$(date +"%Y%m%d%H%M%S").json")
           alerts_length=$(echo "$jq_result" | jq 'length')
           echo "Alerts length: $alerts_length"
           if [[ $alerts_length -gt 0 ]]; then
