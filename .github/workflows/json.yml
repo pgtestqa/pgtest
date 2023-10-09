@@ -40,7 +40,7 @@ jobs:
         run: |
           for target in ${{ matrix.targets }}; do
           echo "Checking scan report for $target"
-          jq_result=$(jq -e '.alerts | length' "myjsonreport-"*.json)
+          jq_result=$(jq -e '.alerts | length' report_json.json)
           echo "jq result: $jq_result"
           if [[ $jq_result -gt 0 ]]; then
            echo "Security issues found in the scan report."
