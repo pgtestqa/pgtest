@@ -45,12 +45,12 @@ jobs:
           for target in ${{ matrix.targets }}; do
           echo "Checking scan report for $target"
           jq_result=$(jq '.site[].alerts' "./myjsonreport-$(date +"%Y%m%d%H%M%S").json")
-          echo "JSON content: $jq_result"
           alerts_length=$(echo "$jq_result" | jq 'length')
           echo "Alerts length: $alerts_length"
           if [[ $alerts_length -gt 0 ]]; then
           echo "Security issues found in the scan report."
           echo "::set-output name=issues-found::true"  # Set an output variable to indicate issues found
+          exit 1  # Exit with an error code to stop the workflow
           else
               echo "No security issues found in the scan report."
               echo "::set-output name=issues-found::false"  # Set an output variable to indicate no issues found
