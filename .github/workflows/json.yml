@@ -37,8 +37,7 @@ jobs:
           for target in ${{ matrix.targets }}; do
             mv report_html.html "myreport-$(date +"%Y%m%d%H%M%S").html"
             mv report_json.json "myjsonreport-$(date +"%Y%m%d%H%M%S").json"
-           
-          done
+           done
 
       - name: Check for Issues in Scan Report
         id: check-for-issues
