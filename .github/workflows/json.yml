@@ -42,8 +42,9 @@ jobs:
       - name: Check for Issues in Scan Report
         id: check-for-issues
         run: |
+          for target in ${{ matrix.targets }}; do
           echo "Checking scan report for $target"
-          jq_result=$(jq '.alerts' "./myjsonreport-$(date +"%Y%m%d%H%M%S").json")
+          jq_result=$(jq '.site[].alerts' "./myjsonreport-$(date +"%Y%m%d%H%M%S").json")
           echo "JSON content: $jq_result"
           alerts_length=$(echo "$jq_result" | jq 'length')
           echo "Alerts length: $alerts_length"
@@ -51,10 +52,10 @@ jobs:
           echo "Security issues found in the scan report."
           echo "::set-output name=issues-found::true"  # Set an output variable to indicate issues found
           else
-           echo "No security issues found in the scan report."
-           echo "::set-output name=issues-found::false"  # Set an output variable to indicate no issues found
-           fi
-           done
+              echo "No security issues found in the scan report."
+              echo "::set-output name=issues-found::false"  # Set an output variable to indicate no issues found
+          fi
+          done
 
       - name: Publish Scan Reports
         if: failure() == true
