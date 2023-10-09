@@ -44,7 +44,7 @@ jobs:
           alerts_length=$(echo "$jq_result" | jq 'length')
 
           # Check if there are any alerts with riskcode other than 0
-          any_non_zero_riskcode=$(echo "$jq_result" | jq 'any(.[] | select(.riskcode != "0"))')
+          any_non_zero_riskcode=$(echo "$jq_result" | jq 'any(select(.riskcode != "0"))')
 
           if [[ $alerts_length -gt 0 && $any_non_zero_riskcode == "true" ]]; then
           echo "Security issues found in the scan report with non-zero riskcodes."
