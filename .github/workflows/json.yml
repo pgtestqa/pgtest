@@ -42,6 +42,7 @@ jobs:
             if jq -e '.alerts | length > 0' "myjsonreport-"*.json; then
               echo "Security issues found in the scan report."
               echo "::set-output name=issues-found::true"  # Set an output variable to indicate issues found
+              exit 1 # Exit with an error code to stop the workflow
             else
               echo "No security issues found in the scan report."
               echo "::set-output name=issues-found::false"  # Set an output variable to indicate no issues found
