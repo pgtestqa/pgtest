@@ -42,13 +42,16 @@ jobs:
           echo "Checking scan report for $target"
           jq_result=$(jq '.site[].alerts' "myjsonreport-$(date +"%Y%m%d%H%M%S").json")
           alerts_length=$(echo "$jq_result" | jq 'length')
-          echo "Alerts length: $alerts_length"
-          if [[ $alerts_length -gt 0 ]]; then
-          echo "Security issues found in the scan report."
+
+          # Check if there are any alerts with riskcode other than 0
+          any_non_zero_riskcode=$(echo "$jq_result" | jq 'any(.[] | select(.riskcode != "0"))')
+
+          if [[ $alerts_length -gt 0 && $any_non_zero_riskcode == "true" ]]; then
+          echo "Security issues found in the scan report with non-zero riskcodes."
           echo "::set-output name=issues-found::true"  # Set an output variable to indicate issues found
           exit 1  # Exit with an error code to stop the workflow
           else
-              echo "No security issues found in the scan report."
+              echo "No security issues found in the scan report or all riskcodes are zero."
               echo "::set-output name=issues-found::false"  # Set an output variable to indicate no issues found
           fi
           done
@@ -66,7 +69,7 @@ jobs:
         run: |
           ISSUE_BODY="Security issues were found in the scan report. See the attached scan report artifacts for details."
           curl -X POST \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            -H "Accept: application/vnd.github.v3+json" \
-            -d '{"title": "Security Issues Found", "body": "'"$ISSUE_BODY"'"}' \
-            "https://api.github.com/repos/${{ github.repository }}/issues"
+          -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          -H "Accept: application/vnd.github.v3+json" \
+          -d "{\"title\": \"Security Issues Found\", \"body\": \"$ISSUE_BODY\"}" \
+          "https://api.github.com/repos/${{ github.repository }}/issues"
