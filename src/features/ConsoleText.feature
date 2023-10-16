@@ -26,7 +26,7 @@ Feature: Console Text
 
         Given Open the url "https://www.the-qrcode-generator.com/"
         Then Input the text from file and save the QR Code
-
+#njkcndfdkfmv
 
 
 
